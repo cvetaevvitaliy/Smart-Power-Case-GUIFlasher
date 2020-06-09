@@ -152,7 +152,7 @@ void Flash_Device::run(){
         hid_free_enumeration(devs);
         printf("#");
         //emit Flash_Device_Sent_Message("wait:" + QString::number(30 - i));
-        sleep(1);
+        this->sleep(1);
         if (valid_hid_devices > 0) break;
     }
     if (valid_hid_devices == 0) {
@@ -173,7 +173,7 @@ void Flash_Device::run(){
 
     printf("\n> [%04X:%04X] device is found !\n", VID, PID);
     emit Flash_Device_Sent_Message("BootLoader is found");
-    sleep(2);
+    this->sleep(2);
 
     // Send RESET PAGES command to put HID bootloader in initial stage...
     memset(hid_tx_buf, 0, sizeof(hid_tx_buf)); //Fill the hid_tx_buf with zeros.
@@ -216,13 +216,13 @@ void Flash_Device::run(){
                 goto exit;
             }
             n_bytes += (HID_TX_SIZE - 1);
-            usleep(500);
+            this->usleep(500);
         }
         printf(" %d Bytes flashed\n", n_bytes);
         emit NeedUpdateProgressBar(n_bytes);
         do {
             hid_read(handle, hid_rx_buf, 9);
-            usleep(500);
+            this->usleep(500);
         } while (hid_rx_buf[7] != 0x02);
 
         memset(page_data, 0, sizeof(page_data));
@@ -263,7 +263,6 @@ exit:
     //this->exit();
     this->quit();
     this->wait();
-
 }
 
 int Flash_Device::usb_write(hid_device *device, uint8_t *buffer, int len){
@@ -272,7 +271,7 @@ int Flash_Device::usb_write(hid_device *device, uint8_t *buffer, int len){
 
     while(((retval = hid_write(device, buffer, len)) < len) && --retries) {
         if(retval < 0) {
-            usleep(100 * 1000); // No data has been sent here. Delay and retry.
+            this->usleep(100 * 1000); // No data has been sent here. Delay and retry.
         } else {
             return 0; // Partial data has been sent. Firmware will be corrupted. Abort process.
         }
