@@ -10,6 +10,8 @@
 #include <QString>
 #include <QFileDialog>
 #include <QSpacerItem>
+#include <QTextBrowser>
+#include <QThread>
 
 extern "C" {
 #include "hidapi.h"
@@ -25,6 +27,30 @@ extern "C" {
 #define PID                             0xBEBA
 #define FIRMWARE_VER                    0x0300
 }
+
+
+class Flash_Device : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit Flash_Device(const char *file);
+    void run();
+signals:
+void Flash_Device_Sent_Message(QString str);
+void NeedStartFlashDevice(const char *);
+void NeedUpdateProgressBar(int);
+void NeedSetRangeProgressBar(int, int);
+
+private:
+
+    const char *open_file;
+    int usb_write(hid_device *device, uint8_t *buffer, int len);
+    long int filesize( FILE *fp );
+
+};
+
+
 
 class Main_App : public QWidget
 {
@@ -50,24 +76,28 @@ private:
 
     QString open_file;
 
+    QTextBrowser *text_browser;
+
+    Flash_Device *thread;
+
 private slots:
     void OpenFile();
     void FlashDevice();
-    void UpdateProgressBar(int num);
+    void UpdateProgressBar(int);
+    void SetRangeProgressBar(int, int);
+    void UpdateMessage(QString str);
 
 private:
 
-    int StartFlashDevice(const char *file);
-    int usb_write(hid_device *device, uint8_t *buffer, int len);
-    long int filesize( FILE *fp );
 
 
-//signals:
-//    void UpdateProgressBar(int num);
+signals:
+    void NeedStartFlashDevice(const char *);
+    void NeedUpdateProgressBar(int);
+    void NeedSetRangeProgressBar(int, int);
+
 
 };
-
-
 
 
 #endif // MAIN_APP_H
